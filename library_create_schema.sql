@@ -19,14 +19,14 @@ $do$;
 -- Represents a record of library materials with information on their availability and location.
 CREATE TABLE IF NOT EXISTS Catalog (
     catalog_id SERIAL PRIMARY KEY, 
-    name VARCHAR(500) NOT NULL, -- The name of the catalog.
-	location VARCHAR(500) -- The location of the material within the library.
+    name VARCHAR(500) NOT NULL UNIQUE, -- The name of the catalog.
+	location VARCHAR(500) DEFAULT NULL -- The location of the material within the library.
 );
 
 -- Represents the various genres or categories of library materials.
 CREATE TABLE IF NOT EXISTS Genre (
     genre_id SERIAL PRIMARY KEY, 
-    name VARCHAR(255) NOT NULL, 
+    name VARCHAR(255) NOT NULL UNIQUE, 
     description TEXT -- A brief introduction or description of the genre.
 );
 
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS Borrow (
 -- Represents authors who have created library materials.
 CREATE TABLE IF NOT EXISTS Author (
     author_id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL, -- The name of the author.
+    name VARCHAR(255) NOT NULL UNIQUE, -- The name of the author.
     birth_date DATE DEFAULT NULL,
     nationality VARCHAR(100) DEFAULT NULL -- The nationality of the author (optional).
 );
@@ -109,8 +109,68 @@ CREATE TABLE IF NOT EXISTS Authorship (
 	FOREIGN KEY (material_id) 
 		REFERENCES Material(material_id)
 		ON DELETE CASCADE
-		ON UPDATE CASCADE
+		ON UPDATE CASCADE,
+	CONSTRAINT unique_author_material UNIQUE (author_id, material_id)
 );
+
+/*///////////////////
+///////Triggers//////
+/////////////////////
+*/
+
+-- Trigger to synchronize the key sequences for insertions (work around for keys not updating)
+-- it basically just gets what the max key is (an Int) and increments it by 1 for the next insertion
+CREATE OR REPLACE FUNCTION sync_sequence_on_insert() RETURNS TRIGGER AS $$
+DECLARE
+    sequence_name TEXT;
+BEGIN
+    SELECT pg_get_serial_sequence(TG_TABLE_NAME, TG_ARGV[0]) INTO sequence_name;
+    
+    EXECUTE format('SELECT setval(%L, COALESCE((SELECT MAX(%I) FROM %I), 1) + 1, false)', sequence_name, TG_ARGV[0], TG_TABLE_NAME);
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER sync_catalog_sequence_on_insert
+AFTER INSERT ON Catalog
+FOR EACH ROW
+EXECUTE FUNCTION sync_sequence_on_insert('catalog_id');
+
+CREATE TRIGGER sync_genre_sequence_on_insert
+AFTER INSERT ON Genre
+FOR EACH ROW
+EXECUTE FUNCTION sync_sequence_on_insert('genre_id');
+
+CREATE TRIGGER sync_material_sequence_on_insert
+AFTER INSERT ON Material
+FOR EACH ROW
+EXECUTE FUNCTION sync_sequence_on_insert('material_id');
+
+CREATE TRIGGER sync_member_sequence_on_insert
+AFTER INSERT ON Member
+FOR EACH ROW
+EXECUTE FUNCTION sync_sequence_on_insert('member_id');
+
+CREATE TRIGGER sync_staff_sequence_on_insert
+AFTER INSERT ON Staff
+FOR EACH ROW
+EXECUTE FUNCTION sync_sequence_on_insert('staff_id');
+
+CREATE TRIGGER sync_borrow_sequence_on_insert
+AFTER INSERT ON Borrow
+FOR EACH ROW
+EXECUTE FUNCTION sync_sequence_on_insert('borrow_id');
+
+CREATE TRIGGER sync_author_sequence_on_insert
+AFTER INSERT ON Author
+FOR EACH ROW
+EXECUTE FUNCTION sync_sequence_on_insert('author_id');
+
+CREATE TRIGGER sync_authorship_sequence_on_insert
+AFTER INSERT ON Authorship
+FOR EACH ROW
+EXECUTE FUNCTION sync_sequence_on_insert('authorship_id');
 
 -- init tables with sample data
 DO $$
