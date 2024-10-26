@@ -21,7 +21,48 @@ BEGIN
     RAISE NOTICE 'All tables and sequences in schema % have been dropped.', schema_name;
 END $$;
 
+-- Q1 
+CREATE OR REPLACE VIEW available_materials AS
+SELECT material_id, title
+FROM Material
+WHERE material_id NOT IN (
+    SELECT material_id
+    FROM Borrow
+    WHERE return_date IS NULL
+);
+
+-- Q2 
+CREATE OR REPLACE VIEW currently_overdue AS
+SELECT borrow_date, due_date
+FROM Borrow
+WHERE return_date IS NULL;
+
+-- Q3 
+CREATE OR REPLACE VIEW show_top_10_materials AS
+select m.title, count(m.title)
+from Borrow as b, Material as m
+where b.material_id = m.material_id
+group by b.material_id, m.title
+limit 10;
+
+-- Q8
+CREATE OR REPLACE PROCEDURE update_return_date(material_title VARCHAR, new_return_date DATE)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE Borrow
+    SET return_date = new_return_date
+    WHERE material_id IN (
+        SELECT material_id
+        FROM Material
+        WHERE title = material_title
+    );
+END;
+$$;
+
 /*
+Input...
+
 Title: New book
 Date: 2020-08-01
 Catalog: E-Books
@@ -29,6 +70,7 @@ Genre: Mystery & Thriller
 Author: Lucas Luke
 */
 
+-- Q10
 CREATE OR REPLACE PROCEDURE add_material(
     p_title VARCHAR(500),
     p_publication_date DATE,
@@ -92,7 +134,7 @@ BEGIN
     	VALUES (p_title, p_publication_date, v_catalog_id, v_genre_id)
     	RETURNING material_id INTO v_material_id;
 
-		RAISE NOTICE 'Material added with ID % and title %', v_catalog_id, p_title;
+		RAISE NOTICE 'Material added with ID % and title %', v_material_id, p_title;
 	ELSE
 		RAISE NOTICE 'Material with title % already exists! Nothing Added.', p_title;
     END IF;
