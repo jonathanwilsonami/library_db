@@ -66,13 +66,14 @@ CREATE TABLE IF NOT EXISTS Staff (
 
 -- Represents the borrowing activity of library materials by members.
 CREATE TABLE IF NOT EXISTS Borrow (
-    borrow_id SERIAL PRIMARY KEY,
+    borrow_id SERIAL UNIQUE NOT NULL, 
     material_id INT NOT NULL,
     member_id INT NOT NULL,
     staff_id INT NOT NULL,
 	borrow_date DATE NOT NULL DEFAULT CURRENT_DATE,
     due_date DATE NOT NULL,
     return_date DATE,
+	PRIMARY KEY (material_id, member_id, borrow_date),
 	FOREIGN KEY (material_id) 
 		REFERENCES Material(material_id)
 		ON DELETE CASCADE
@@ -99,9 +100,10 @@ CREATE TABLE IF NOT EXISTS Author (
 
 -- Represents the relationship between authors and the materials they have created.
 CREATE TABLE IF NOT EXISTS Authorship (
-    authorship_id SERIAL PRIMARY KEY,
+    authorship_id SERIAL UNIQUE NOT NULL,
     author_id INT NOT NULL,
     material_id INT NOT NULL,
+	PRIMARY KEY (author_id, material_id),
 	FOREIGN KEY (author_id) 
 		REFERENCES Author(author_id)
 		ON DELETE CASCADE

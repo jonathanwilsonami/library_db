@@ -1,4 +1,4 @@
--- call drop_all_objects_in_schema('public'); -- Use this to start fresh
+call drop_all_objects_in_schema('public'); -- Use this to start fresh
 
 /*
 ////////////////////////////
@@ -81,13 +81,13 @@
 -- WHERE name = 'Emily Miller';
 
 -- 10. How do you add the following material to the database?
-CALL add_material(
-    'New Book', 
-    '2020-08-01', 
-    'E-Books', 
-    'Mystery & Thriller', 
-    'Lucas Luke'
-);
+-- CALL add_material(
+--     'New Book', 
+--     '2020-08-01', 
+--     'E-Books', 
+--     'Mystery & Thriller', 
+--     'Lucas Luke'
+-- );
 
 /*
 Title: New book
