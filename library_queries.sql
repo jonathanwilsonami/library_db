@@ -1,4 +1,4 @@
-call drop_all_objects_in_schema('public'); -- Use this to start fresh
+-- call drop_all_objects_in_schema('public'); -- Use this to start fresh
 
 /*
 ////////////////////////////

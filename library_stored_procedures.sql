@@ -1,3 +1,10 @@
+/*
+////////////////////////////////
+///////Stored Procedures///////
+///////////////////////////////
+*/
+
+-- Util for dropping everything and starting over
 CREATE OR REPLACE PROCEDURE drop_all_objects_in_schema(schema_name TEXT)
 LANGUAGE plpgsql
 AS $$
@@ -123,7 +130,6 @@ BEGIN
 		RETURNING author_id INTO v_author_id;
     END IF;
 
-
     -- Material
 	SELECT material_id INTO v_material_id
     FROM Material
@@ -156,5 +162,3 @@ BEGIN
     END IF;
 	
 END $$;
-
--- Usage: call drop_all_objects_in_schema('public')
