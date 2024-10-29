@@ -162,3 +162,56 @@ BEGIN
     END IF;
 	
 END $$;
+
+-- Extra Features 
+
+-- CREATE OR REPLACE FUNCTION get_overdue_members()
+-- RETURNS TABLE(member_id INT) AS $$
+-- BEGIN
+--     RETURN QUERY
+--     SELECT member_id
+--     FROM Membership
+--     WHERE overdue_occurrences = 3
+--       AND (status = 'active' OR status IS NULL);
+-- END;
+-- $$ LANGUAGE plpgsql;
+
+
+Drop function process_overdue_materials();
+CREATE OR REPLACE FUNCTION process_overdue_materials()
+RETURNS TABLE(member_id INT, material_id INT) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT b.member_id, b.material_id
+    FROM Borrow as b
+    WHERE b.return_date IS NULL
+      AND b.due_date < CURRENT_DATE;
+
+    UPDATE Membership
+    SET overdue_occurrences = 
+        CASE 
+			WHEN fee_paid = TRUE THEN 0
+            WHEN overdue_occurrences < 3 THEN overdue_occurrences + 1
+            ELSE overdue_occurrences
+        END,
+		-- Set active or deactivated status
+        status = 
+        CASE
+			WHEN fee_paid = TRUE THEN 'active'
+            WHEN overdue_occurrences + 1 >= 3 THEN 'deactivated'
+            ELSE status
+        END,
+		-- Reactivate member as needed
+		fee_paid = 
+            CASE 
+                WHEN fee_paid = TRUE THEN NULL
+                ELSE fee_paid
+            END
+    WHERE Membership.member_id IN (
+        SELECT b.member_id
+        FROM Borrow as b
+        WHERE b.return_date IS NULL
+          AND b.due_date < CURRENT_DATE
+    );
+END;
+$$ LANGUAGE plpgsql;

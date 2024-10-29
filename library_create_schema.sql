@@ -89,7 +89,8 @@ CREATE TABLE IF NOT EXISTS Borrow (
 		ON DELETE CASCADE
 		ON UPDATE CASCADE, 
 	CONSTRAINT check_return_date CHECK (return_date IS NULL OR return_date >= borrow_date),
-    CONSTRAINT check_due_date CHECK (due_date >= borrow_date) 
+    CONSTRAINT check_due_date CHECK (due_date >= borrow_date),
+	CONSTRAINT unique_identifying_relations UNIQUE (material_id, member_id, borrow_date)
 );
 
 -- Represents authors who have created library materials.
@@ -114,6 +115,15 @@ CREATE TABLE IF NOT EXISTS Authorship (
 		ON DELETE CASCADE
 		ON UPDATE CASCADE,
 	CONSTRAINT unique_author_material UNIQUE (author_id, material_id)
+);
+
+-- Membership 
+CREATE TABLE IF NOT EXISTS Membership (
+    member_id INT PRIMARY KEY,
+    status VARCHAR(12) DEFAULT 'active' CHECK (status IN ('active', 'deactivated')),
+    overdue_occurrences INT DEFAULT 0 CHECK (overdue_occurrences BETWEEN 0 AND 3),
+    fee_paid BOOLEAN DEFAULT NULL,
+    FOREIGN KEY (member_id) REFERENCES Member(member_id)
 );
 
 /*///////////////////
@@ -237,6 +247,12 @@ BEGIN
         DELIMITER ','
         CSV HEADER;
     END IF;
+
+	-- Auto populate with member_id defaults 
+	INSERT INTO Membership (member_id)
+    SELECT member_id
+    FROM Member
+    ON CONFLICT (member_id) DO NOTHING;
 	
 END $$;
 
