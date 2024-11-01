@@ -1,6 +1,8 @@
 # Library Database Project 
 The is a simple project that demonstrates concepts in fundamental database design and implementation. 
 
+[project report](Project_Report.pdf)
+
 # ER Diagram 
 
 # Relational Mappings 
