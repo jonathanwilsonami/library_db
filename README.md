@@ -7,8 +7,6 @@ The is a simple project that demonstrates concepts in fundamental database desig
 
 # Relational Mappings 
 
-# Features 
-
 # Technologies & Concepts Used
 - Postgres 
 - ERD diagraming with Draw.io 
@@ -16,5 +14,3 @@ The is a simple project that demonstrates concepts in fundamental database desig
 - Views 
 - Schema creation 
 - Simple ETL process for data ingest
-
-# Setup
